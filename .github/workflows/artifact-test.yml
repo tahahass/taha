@@ -13,10 +13,24 @@ jobs:
       - name: Create test file
         run: |
           mkdir -p out
-          printf 'RASD release connector test\n' > out/hello.txt
-      - name: Publish temporary release asset
+          printf 'RASD workflow artifact connector test\n' > out/hello.txt
+      - name: Upload test artifact
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: rasd-test-artifact
+          path: out/hello.txt
+          compression-level: 0
+          retention-days: 1
+      - name: Publish artifact metadata to repository
         env:
-          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
         run: |
-          gh release delete rasd-artifact-test --yes --cleanup-tag 2>/dev/null || true
-          gh release create rasd-artifact-test out/hello.txt --title 'RASD artifact test' --notes 'Temporary connector test'
+          printf '{"run_id":%s,"artifact_id":%s,"artifact_url":"%s"}\n' "$RUN_ID" "$ARTIFACT_ID" "$ARTIFACT_URL" > latest-artifact.json
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add latest-artifact.json
+          git commit -m 'Publish latest artifact metadata [skip ci]'
+          git push
