@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - '.github/workflows/artifact-test.yml'
+permissions:
+  contents: write
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -11,10 +13,10 @@ jobs:
       - name: Create test file
         run: |
           mkdir -p out
-          printf 'RASD artifact connector test\n' > out/hello.txt
-      - name: Upload test artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: rasd-test-artifact
-          path: out/hello.txt
-          retention-days: 1
+          printf 'RASD release connector test\n' > out/hello.txt
+      - name: Publish temporary release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete rasd-artifact-test --yes --cleanup-tag 2>/dev/null || true
+          gh release create rasd-artifact-test out/hello.txt --title 'RASD artifact test' --notes 'Temporary connector test'
