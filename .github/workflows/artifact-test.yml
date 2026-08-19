@@ -1,0 +1,20 @@
+name: artifact-test
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/artifact-test.yml'
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Create test file
+        run: |
+          mkdir -p out
+          printf 'RASD artifact connector test\n' > out/hello.txt
+      - name: Upload test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rasd-test-artifact
+          path: out/hello.txt
+          retention-days: 1
